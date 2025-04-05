@@ -1,195 +1,212 @@
-use core::num;
-use std::iter;
+use image::{
+    imageops, // For crop and overlay
+    open,
+    DynamicImage,
+    GenericImage, // For copy_from (if needed) and new
+    GenericImageView,
+    GrayImage,
+    Luma, // For grayscale pixel access
+    Pixel,
+    RgbaImage, // Use RGBA for output flexibility
+};
+use std::path::Path; // For checking paths, creating dirs
 
-use image::{buffer::Pixels, imageops::FilterType::Lanczos3, open, DynamicImage, GenericImage, GenericImageView, GrayImage, Pixel,RgbImage, Rgba};
-
-
-#[derive(Debug)]
+// Simplified DiceSides to not hold the image directly
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)] // Added derives for mapping
 enum DiceSides {
-    One(DynamicImage),
-    Two(DynamicImage),
-    Three(DynamicImage),
-    Four(DynamicImage),
-    Five(DynamicImage),
-    Six(DynamicImage),
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)] // Added Clone
 struct Dice {
-    side: DiceSides,
+    side: DiceSides, // Uses the simplified enum
     image: DynamicImage,
 }
 
-#[derive(Debug)]
-struct Dices {
-    dices: [Dice; 6]
-}
+// Dices struct might not be needed if directly using the array
+// #[derive(Debug)]
+// struct Dices {
+//     dices: [Dice; 6]
+// }
 
-#[derive(Debug)]
-struct PixelData {
-    x: u32,
-    y: u32,
-    i: u8
-}
-
-
-struct PixelMap {
-    dice: DiceSides,
-    x: u32,
-    y: u32,
-    pixel: Rgba<u8>
-}
-struct DiceMap {
-    dice: DiceSides,
-    x: u32,
-    y: u32,
-}
-
-struct SetofDice {
-    dice: Vec<DiceMap>, 
-}
-
-// fn assign 
+// Other structs like PixelData, PixelMap, DiceMap, SetofDice removed for simplicity
 
 fn main() {
-    // Load INPUT image, convert to luma8, and get dimensions.
-    let mut input: GrayImage = load_image("images/falcons.jpg");
+    // --- Load Input ---
+    let input: GrayImage = load_image("images/falcons.jpg"); // Assuming load_image handles potential resize
     let (iwidth, iheight) = input.dimensions();
-    let pixel_data = pixel_data_iter(input.clone());
 
-
-    //load array of our dice. vec not needed here ofc
-    let dicks:[Dice; 6] = load_dice_images();
+    // --- Load Dice ---
+    let dicks: [Dice; 6] = load_dice_images(); // load_dice_images now returns [Dice; 6]
+    if dicks.is_empty() || dicks[0].image.width() == 0 || dicks[0].image.height() == 0 {
+         eprintln!("Error loading dice or dice have invalid dimensions.");
+         return;
+     }
     let dwidth = dicks[0].image.width();
     let dheight = dicks[0].image.height();
 
+    // --- Calculate Grid ---
+    let num_dice_x = iwidth / dwidth;
+    let num_dice_y = iheight / dheight;
+
+    if num_dice_x == 0 || num_dice_y == 0 {
+        eprintln!("Input image too small for dice dimensions.");
+        return;
+    }
 
 
-// GOING TO NEED THIS LATER PROBABLY
-    // let num_dice_x = iwidth / dwidth;
-    // let num_dice_y = iheight / dheight;
-//--end GOING TO NEED THIS LATER PROBABLY
-
-//  \/ one liner for pixel_data_iter() \/ \/ \/ \/ \/
-    // let dynamic_rgb_dice: Vec<  = rgb_dice.iter().map(|img| DynamicImage::ImageRgb8(img.clone())).collect();
-    // input.save("output/input.png").unwrap();
+    // --- Prepare Output Image ---
+    let output_width = num_dice_x * dwidth;
+    let output_height = num_dice_y * dheight;
+    // Create RGBA output image
+    let mut output_image = RgbaImage::new(output_width, output_height);
 
 
-    // for (i, dice) in dicks.iter().enumerate() {
-    //     let name: String = i.to_string()+".png";
-    //     input.save(name).unwrap_or_else(|err| println!("Error saving: {}", err));
-    // }
+    // --- Map Blocks and Construct Output ---
+    for grid_y in 0..num_dice_y {
+        for grid_x in 0..num_dice_x {
+            let block_start_x = grid_x * dwidth;
+            let block_start_y = grid_y * dheight;
 
-    // let output_width = num_dice_x * dwidth;
-    // let output_height = num_dice_y * dheight;
-    // let mut output: RgbImage = RgbImage::new(output_width, output_height);
-    // Loop through the image and replace each square with a die
-    
+            // Get view of current block
+            let block_view = imageops::crop_imm(
+                &input,
+                block_start_x,
+                block_start_y,
+                dwidth,
+                dheight,
+            );
 
-    
+            // Calculate average intensity
+            let mut total_intensity: u64 = 0;
+            let num_pixels_in_block = (dwidth * dheight) as u64;
+            for pixel in block_view.to_image().pixels() {
+                total_intensity += pixel[0] as u64; // Luma<u8> pixel value
+            }
+            let avg_intensity = if num_pixels_in_block > 0 {
+                (total_intensity / num_pixels_in_block) as u8
+            } else {
+                0
+            };
+
+            // Map intensity to dice side
+            let target_side: DiceSides = map_intensity_to_dice_side(avg_intensity);
+
+            // Find the matching dice image
+            // Iterate through the 'dicks' array to find the Dice with the matching 'side'
+            let dice_to_draw = dicks.iter().find(|&d| d.side == target_side);
+
+
+            // Paste the dice image onto the output
+            if let Some(dice) = dice_to_draw {
+                let paste_x = grid_x * dwidth;
+                let paste_y = grid_y * dheight;
+                // Ensure dice image is RGBA for overlay
+                let dice_rgba = dice.image.to_rgba8();
+                 imageops::overlay(&mut output_image, &dice_rgba, paste_x as i64, paste_y as i64);
+            } else {
+                 // Should not happen if map_intensity_to_dice_side and dicks array are correct
+                 eprintln!("Warning: Could not find dice for side {:?} at grid ({}, {})", target_side, grid_x, grid_y);
+            }
+
+        }
+    }
+
+    // --- Save Output ---
+    let output_path = "output/dice_output.png";
+    // Ensure output directory exists
+     if let Some(parent_dir) = Path::new(output_path).parent() {
+         std::fs::create_dir_all(parent_dir)
+             .expect("Failed to create output directory");
+     }
+    output_image.save(output_path).unwrap_or_else(|err| {
+        eprintln!("Error saving output image: {}", err);
+    });
+    println!("Output saved to {}", output_path);
 }
 
 
+/// Loads dice images 1side.png to 6side.png from "dice/" folder.
+/// Panics on load failure or inconsistent dimensions.
 fn load_dice_images() -> [Dice; 6] {
-    // currently 500x500 dice
+    let mut dice_array: [Option<Dice>; 6] = Default::default();
+    let mut loaded_dice_dims: Option<(u32, u32)> = None;
 
-    //super fancy core library... gotta remember this one.
-    let mut dices: [Dice; 6] = core::array::from_fn(|i: usize| {
-        let side: DiceSides = match i {
-            0 => DiceSides::One(DynamicImage::new_rgb8(500, 500)),
-            1 => DiceSides::Two(DynamicImage::new_rgb8(500, 500)),
-            2 => DiceSides::Three(DynamicImage::new_rgb8(500, 500)),
-            3 => DiceSides::Four(DynamicImage::new_rgb8(500, 500)),
-            4 => DiceSides::Five(DynamicImage::new_rgb8(500, 500)),
-            5 => DiceSides::Six(DynamicImage::new_rgb8(500, 500)),
+    for i in 0..6 {
+        let side_num = i + 1;
+        let image_path = format!("dice/{}side.png", side_num);
+        let image = open(&image_path).unwrap_or_else(|e| {
+            panic!("Failed to load dice image {}: {}", image_path, e);
+        });
+
+        let current_dims = image.dimensions();
+
+        // Check dimensions
+         if let Some((w, h)) = loaded_dice_dims {
+             if current_dims != (w, h) || w == 0 || h == 0 {
+                 panic!("Inconsistent/Invalid dice dimensions. Expected {}x{}, but {} is {}x{}", w, h, image_path, current_dims.0, current_dims.1);
+            }
+        } else {
+             if current_dims.0 == 0 || current_dims.1 == 0 {
+                panic!("Dice image {} has zero dimensions.", image_path);
+             }
+             loaded_dice_dims = Some(current_dims); // Set expected dimensions from first image
+         }
+
+        // Assign simplified DiceSides enum variant
+        let side = match side_num {
+            1 => DiceSides::One,
+            2 => DiceSides::Two,
+            3 => DiceSides::Three,
+            4 => DiceSides::Four,
+            5 => DiceSides::Five,
+            6 => DiceSides::Six,
             _ => unreachable!(),
         };
-        let image: DynamicImage = DynamicImage::new_rgb8(500, 500);
-        Dice { side, image }
-    });
-    for i in 1..=6 {
-        let image_path = format!("dice/{}side.png", i);
-        let image = open(image_path).unwrap();
-        
-        let ds: Dice = Dice {
-            side: match i {
-                0 => DiceSides::One(image.clone()),
-                1 => DiceSides::Two(image.clone()),
-                2 => DiceSides::Three(image.clone()),
-                3 => DiceSides::Four(image.clone()),
-                4 => DiceSides::Five(image.clone()),
-                5 => DiceSides::Six(image.clone()),
-                _ => panic!("Invalid dice side"),
-            },
-            image: image.clone()
-        };
-        dices[i - 1] = ds;
-        
+
+        // Store in Option array first
+        dice_array[i] = Some(Dice { side, image });
     }
-    dices
-    
-    //try to manually deconstruct the 
-    // let dray: [DynamicImage; 6] = [
-    //     dice_images.remove(0),
-    //     dice_images.remove(0),
-    //     dice_images.remove(0),
-    //     dice_images.remove(0),
-    //     dice_images.remove(0),
-    //     dice_images.remove(0),
-    // ];
-    // 
+
+    // Convert [Option<Dice>; 6] to [Dice; 6]
+     core::array::from_fn(|i| {
+        dice_array[i]
+             .clone()
+             .expect("Internal error: Dice image option was None")
+    })
 }
 
-fn load_image(_input_image: &str) -> GrayImage {
-    // Load Image from file
-    let input_image: GrayImage = open("images/falcons.jpg").unwrap().into_luma8();
-    // Image is grayscaled here
-    
-    let dynamic_image= DynamicImage::ImageLuma8(input_image);
-    //resized here, probs moving later ofc
-    let resized = dynamic_image.resize(2500, 2000, image::imageops::FilterType::Lanczos3).into_luma8();
-    resized
+/// Loads and returns a GrayImage. Input path is hardcoded for now.
+fn load_image(_input_path: &str) -> GrayImage {
+     // Path is currently hardcoded inside, consider passing _input_path through
+    let img = open("images/falcons.jpg") // Use _input_path here if needed
+        .expect("Failed to load input image")
+        .into_luma8();
+
+    // Decide if resizing is needed here or should be removed/conditional
+    // let dynamic_image = DynamicImage::ImageLuma8(img);
+    // let resized = dynamic_image.resize(2500, 2000, image::imageops::FilterType::Lanczos3).into_luma8();
+    // return resized;
+
+    img // Return original grayscale image if no resize
 }
 
 
-
-
-fn grayscale_intensity_vec(img: GrayImage) -> Vec<PixelData> {
-    let ipxls = img.enumerate_pixels();
-    let mut opxls: Vec<PixelData> = vec![];
-    for (x, y, pixel) in ipxls {
-        let intensity = pixel[0]; // Grayscale intensity
-        let pd: PixelData = PixelData {
-            x,
-            y,
-            i: intensity
-        };
-        opxls.push(pd);
+/// Maps average grayscale intensity (0-255) to a DiceSides variant.
+fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
+    match avg_intensity {
+         0..=42 => DiceSides::One,
+         43..=85 => DiceSides::Two,
+         86..=128 => DiceSides::Three,
+        129..=171 => DiceSides::Four,
+        172..=214 => DiceSides::Five,
+        215..=255 => DiceSides::Six,
     }
-    opxls
 }
 
-
-// fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
-//     let ipxls = img.pixels();
-//     let mut opxls: Vec<PixelData> = vec![];
-//     for p in ipxls {
-//         let rgb = p.2;
-//         let pd: PixelData = PixelData {
-//             x: p.0,
-//             y: p.1,
-//             r: rgb[0],
-//             g: rgb[1],
-//             b: rgb[2]
-//         };
-//         opxls.push(pd);
-//     }
-//     opxls
-// }
-
-
-
-
-
-
-
+// Removed grayscale_intensity_vec and pixel_data_iter as block processing is done directly in main
