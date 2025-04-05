@@ -7,6 +7,9 @@ use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut};
 use imageproc::rect::Rect;
 use ab_glyph::{FontVec, PxScale, ScaleFont, Font};
 
+mod lib;
+
+
 // Simplified DiceSides to not hold the image directly
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)] // Added derives for mapping
 enum DiceSides {
@@ -192,28 +195,6 @@ fn load_dice_images() -> [Dice; 6] {
             .clone()
             .expect("Internal error: Dice image option was None after processing")
     })
-}
-
-
-/// Loads and returns a GrayImage. Input path is hardcoded for now.
-fn load_image(_input_path: &str) -> GrayImage {
-     // Path is currently hardcoded inside, consider passing _input_path through
-
-    // let img = ImageReader::open("images/flag.jpeg").unwrap()
-    //     .decode()
-    //     .expect("Failed to decode image")
-    //     .into_luma8();
-
-    let img = open("images/falcons.jpg") // Use _input_path here if needed
-        .expect("Failed to load input image")
-        .into_luma8();
-
-    // // conditional resize here later
-    let dynamic_image = DynamicImage::ImageLuma8(img);
-    let resized = dynamic_image.resize(1800,1800, image::imageops::FilterType::Lanczos3).into_luma8();
-    return resized;
-
-    img // Return original grayscale image if no resize
 }
 
 
