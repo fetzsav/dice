@@ -2,6 +2,10 @@ use image::{
     imageops, open, DynamicImage, GenericImage, GenericImageView, GrayImage, ImageReader, Luma, Pixel, RgbaImage // Use RGBA for output flexibility
 };
 use std::path::Path; // For checking paths, creating dirs
+use image::{Rgba};
+use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut};
+use imageproc::rect::Rect;
+use ab_glyph::{FontVec, ScaleFont, PxScale};
 
 // Simplified DiceSides to not hold the image directly
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)] // Added derives for mapping
@@ -108,6 +112,14 @@ fn main() {
 
         }
     }
+
+    //adding debug text
+    add_reference_text(
+        &mut output_image,
+        (dwidth, dheight),
+        num_dice_x * num_dice_y,
+        (output_width, output_height),
+    );
 
     // --- Save Output ---
     let output_path = "output/dice_output.png";
@@ -218,49 +230,47 @@ fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
 }
 
 
-use image::{Rgba, RgbaImage};
-use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut};
-use imageproc::rect::Rect;
-use rusttype::{Font, Scale};
 
-/// Adds reference text (e.g., dice size, total dice used, full image size) to the image.
+
+/// add some reference text (dice size, total dice, image size) onto the image
 fn add_reference_text(
     image: &mut RgbaImage,
     dice_size: (u32, u32),
     total_dice: u32,
     full_image_size: (u32, u32),
 ) {
-    // Load a font (you can replace this with a path to a custom font if needed)
-    let font_data = include_bytes!("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
-    let font = Font::try_from_bytes(font_data as &[u8]).expect("Failed to load font");
+    // load a font
+    let font_data = include_bytes!("/usr/share/fonts/fontawesome-regular.ttf");
+    let font = FontVec::try_from_vec(font_data.to_vec()).expect("font loading failed");
 
-    // Text to overlay
+    // build the overlay text
     let text = format!(
-        "Dice size: {}x{}\nTotal dice: {}\nImage size: {}x{}",
+        "dice size: {}x{}\ntotal dice: {}\nimage size: {}x{}",
         dice_size.0, dice_size.1, total_dice, full_image_size.0, full_image_size.1
     );
 
-    // Text properties
-    let scale = Scale { x: 15.0, y: 15.0 }; // Font size
-    let text_color = Rgba([255, 255, 255, 255]); // White text
-    let background_color = Rgba([0, 0, 0, 200]); // Black background with some transparency
+    // text style
+    let scale = PxScale::from(15.0);
+    let font = font.as_scaled(scale);
+    let text_color = Rgba([255, 255, 255, 255]); // white text
+    let background_color = Rgba([0, 0, 0, 200]); // semi-transparent black
 
-    // Calculate text dimensions
-    let text_width = 200; // Approximate width of the text box
-    let text_height = 50; // Approximate height of the text box
+    // estimate text box dimensions
+    let text_width = 200;
+    let text_height = 50;
 
-    // Draw a black rectangle as the background for the text
+    // draw a black rectangle behind the text
     let rect = Rect::at(5, (image.height() - text_height - 5) as i32)
         .of_size(text_width, text_height);
     draw_filled_rect_mut(image, rect, background_color);
 
-    // Draw the text onto the image
+    // draw the text onto the image
     draw_text_mut(
         image,
         text_color,
-        10, // X position
-        (image.height() - text_height) as i32, // Y position
-        scale,
+        10, // x offset
+        (image.height() - text_height) as i32, // y offset
+        font,
         &font,
         &text,
     );
