@@ -89,35 +89,6 @@ fn load_image(_input_image: &str) -> DynamicImage {
 }
 
 
-// fn iterate_grid(num_dice_x: u32, num_dice_y: u32, dwidth: u32, dheight: u32, dice: &Vec<DynamicImage>, input: &DynamicImage) {
-//     let mut output = input.clone();
-//     for i in 0..num_dice_x {
-//         for j in 0..num_dice_y {
-//             let x: u32 = i * dwidth;
-//             let y: u32 = j * dheight;
-//             let die: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = dice[((i + j) % 6) as usize].to_rgb8();
-//             let die_rgba = DynamicImage::ImageRgb8(die).into_rgba8();
-//             output.copy_from(&die_rgba, x, y).unwrap();
-//         }
-//     }
-// }
-
-fn iter_proc(input: DynamicImage, dice_size: u32, dwidth: u32, dheight: u32, iwidth: u32, iheight: u32) {
-    let mut output: RgbImage = input.clone().to_rgb8();
-    // Top-left corner of the block in the source image
-    let start_x: u32 = dwidth * dice_size;
-    let start_y: u32 = dice_size * dice_size;
-    
-    // Bottom-right corner (exclusive) of the block in the source image
-    let end_x: u32 = (start_x + dice_size).min(iwidth);
-    let end_y: u32 = (start_y + dice_size).min(iwidth);
-    // Now, you know the block in gray_img runs from
-    // x = start_x to end_x (exclusive)
-    // y = start_y to end_y (exclusive)
-}
-
-
-
 fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
     let ipxls = img.pixels();
     let mut opxls: Vec<PixelData> = vec![];
