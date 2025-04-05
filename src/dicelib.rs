@@ -139,7 +139,7 @@ pub fn load_image(input_path: &str) -> GrayImage {
 
    // // conditional resize here later
    let dynamic_image = DynamicImage::ImageLuma8(img);
-   let resized = dynamic_image.resize(1800,1800, image::imageops::FilterType::Lanczos3).into_luma8();
+   let resized = dynamic_image.resize(2048,2048, image::imageops::FilterType::Lanczos3).into_luma8();
    return resized;
 
    img // Return original grayscale image if no resize

@@ -14,11 +14,22 @@ pub fn load_dice_images_static() -> [Dice; 6] {
         include_bytes!("../dice/6side.png").as_ref(),
     ];
 
+    let target_width: u32 = 32;  // Desired width for resizing
+    let target_height: u32 = 32; // Desired height for resizing
+
     let mut dice_array: [Option<Dice>; 6] = Default::default();
 
     for (i, &image_data) in dice_images.iter().enumerate() {
         let image = image::load_from_memory(image_data)
             .expect(&format!("Failed to load embedded dice image {}", i + 1));
+
+        // Resize the image
+        let resized_image = image.resize_exact(
+            target_width,
+            target_height,
+            imageops::FilterType::Lanczos3, // High-quality resizing filter
+        );
+
         dice_array[i] = Some(Dice {
             side: match i {
                 0 => DiceSides::One,
@@ -29,7 +40,7 @@ pub fn load_dice_images_static() -> [Dice; 6] {
                 5 => DiceSides::Six,
                 _ => unreachable!(),
             },
-            image,
+            image: resized_image,
         });
     }
 
