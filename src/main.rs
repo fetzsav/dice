@@ -3,6 +3,28 @@ use std::iter;
 
 use image::{imageops::FilterType::Lanczos3, open, DynamicImage, GrayImage, RgbImage, GenericImage};
 
+
+
+enum DiceSides {
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+}
+
+
+struct DiceMap {
+    dice: DiceSides,
+    x: u32,
+    y: u32,
+}
+
+struct {
+    dice: Vec<DiceMap>, 
+}
+
 fn main() {
     // Load image
     let mut input: DynamicImage = load_image("images/falcons.jpg");
@@ -53,15 +75,33 @@ fn load_image(_input_image: &str) -> DynamicImage {
 }
 
 
-fn iterate_grid(num_dice_x: u32, num_dice_y: u32, dwidth: u32, dheight: u32, dice: &Vec<DynamicImage>, input: &DynamicImage) {
+// fn iterate_grid(num_dice_x: u32, num_dice_y: u32, dwidth: u32, dheight: u32, dice: &Vec<DynamicImage>, input: &DynamicImage) {
+//     let mut output = input.clone();
+//     for i in 0..num_dice_x {
+//         for j in 0..num_dice_y {
+//             let x: u32 = i * dwidth;
+//             let y: u32 = j * dheight;
+//             let die: image::ImageBuffer<image::Rgb<u8>, Vec<u8>> = dice[((i + j) % 6) as usize].to_rgb8();
+//             let die_rgba = DynamicImage::ImageRgb8(die).into_rgba8();
+//             output.copy_from(&die_rgba, x, y).unwrap();
+//         }
+//     }
+// }
+
+fn iter_grid_correctly(input: DynamicImage, dice_size: u32, dwidth: u32, dheight: u32, iwidth: u32, iheight: u32) {
     let mut output = input.clone();
-    for i in 0..num_dice_x {
-        for j in 0..num_dice_y {
-            let x = i * dwidth;
-            let y = j * dheight;
-            let die = dice[((i + j) % 6) as usize].to_rgb8();
-            let die_rgba = DynamicImage::ImageRgb8(die).into_rgba8();
-            output.copy_from(&die_rgba, x, y).unwrap();
-        }
-    }
+    // Top-left corner of the block in the source image
+    let start_x: u32 = dwidth * dice_size;
+    let start_y: u32 = dice_size * dice_size;
+    
+    // Bottom-right corner (exclusive) of the block in the source image
+    // Ensure we don't go past the image boundary if source dims aren't multiples of DICE_SIZE
+    let end_y: u32 = (start_y + d_size).min(source_height);
+    let end_x: u32 = (start_x + d_size).min(source_width);
+
+
+    
+    // Now, you know the block in gray_img runs from
+    // x = start_x to end_x (exclusive)
+    // y = start_y to end_y (exclusive)
 }
