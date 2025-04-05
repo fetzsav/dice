@@ -222,6 +222,7 @@ checksum = "43da5946c66ffcc7745f48db692ffbb10a83bfe0afd96235c5c2a4fb23994929"
 name = "dice"
 version = "0.1.0"
 dependencies = [
+ "ab_glyph",
  "image",
  "imageproc",
  "rusttype",

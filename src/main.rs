@@ -5,7 +5,7 @@ use std::path::Path; // For checking paths, creating dirs
 use image::{Rgba};
 use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut};
 use imageproc::rect::Rect;
-use ab_glyph::{FontVec, ScaleFont, PxScale};
+use ab_glyph::{FontVec, PxScale, ScaleFont, Font};
 
 // Simplified DiceSides to not hold the image directly
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)] // Added derives for mapping
@@ -240,7 +240,8 @@ fn add_reference_text(
     full_image_size: (u32, u32),
 ) {
     // load a font
-    let font_data = include_bytes!("/usr/share/fonts/fontawesome-regular.ttf");
+    let font_data = std::fs::read("/usr/share/fonts/TTF/DejaVuSans-Bold.ttf")
+        .expect("Failed to load font file");
     let font = FontVec::try_from_vec(font_data.to_vec()).expect("font loading failed");
 
     // build the overlay text
@@ -250,17 +251,17 @@ fn add_reference_text(
     );
 
     // text style
-    let scale = PxScale::from(15.0);
-    let font = font.as_scaled(scale);
+    let scale = PxScale::from(40.0);
+    let font = font; // Use FontVec directly without scaling
     let text_color = Rgba([255, 255, 255, 255]); // white text
     let background_color = Rgba([0, 0, 0, 200]); // semi-transparent black
 
     // estimate text box dimensions
     let text_width = 200;
-    let text_height = 50;
+    let text_height = 60;
 
     // draw a black rectangle behind the text
-    let rect = Rect::at(5, (image.height() - text_height - 5) as i32)
+    let rect = Rect::at(5, 5) // Top-left corner
         .of_size(text_width, text_height);
     draw_filled_rect_mut(image, rect, background_color);
 
@@ -269,8 +270,8 @@ fn add_reference_text(
         image,
         text_color,
         10, // x offset
-        (image.height() - text_height) as i32, // y offset
-        font,
+        10, // y offset
+        scale,
         &font,
         &text,
     );
