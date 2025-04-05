@@ -1,19 +1,31 @@
 use core::num;
 use std::iter;
 
-use image::{buffer::Pixels, imageops::FilterType::Lanczos3, open, DynamicImage, GenericImage, GenericImageView, GrayImage, Pixel, Pixels, RgbImage};
+use image::{buffer::Pixels, imageops::FilterType::Lanczos3, open, DynamicImage, GenericImage, GenericImageView, GrayImage, Pixel,RgbImage, Rgba};
 
 
-
+#[derive(Debug)]
 enum DiceSides {
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
+    One(DynamicImage),
+    Two(DynamicImage),
+    Three(DynamicImage),
+    Four(DynamicImage),
+    Five(DynamicImage),
+    Six(DynamicImage),
 }
 
+#[derive(Debug)]
+struct Dice {
+    side: DiceSides,
+    image: DynamicImage,
+}
+
+#[derive(Debug)]
+struct Dices {
+    dices: [Dice; 6]
+}
+
+#[derive(Debug)]
 struct PixelData {
     x: u32,
     y: u32,
@@ -39,18 +51,36 @@ struct SetofDice {
     dice: Vec<DiceMap>, 
 }
 
+// fn assign 
+
 fn main() {
-    // Load image
-    let mut input: DynamicImage = load_image("images/falcons.jpg");
-    let (iwidth, iheight) = input.to_luma8().dimensions();
-    let dice: Vec<DynamicImage> = load_dice_images();
-    let rgb_dice = dice.iter().map(|img| img.to_rgb8()).collect::<Vec<_>>();
-    let (dwidth, dheight) = dice[0].to_luma8().dimensions();
-    let num_dice_x = iwidth / dwidth;
-    let num_dice_y = iheight / dheight;
-    let dynamic_rgb_dice: Vec<DynamicImage> = rgb_dice.iter().map(|img| DynamicImage::ImageRgb8(img.clone())).collect();
-    iterate_grid(num_dice_x, num_dice_y, dwidth, dheight, &dynamic_rgb_dice, &mut input);
-    input.save("output/input.png").unwrap();
+    // Load INPUT image, convert to luma8, and get dimensions.
+    let mut input: GrayImage = load_image("images/falcons.jpg");
+    let (iwidth, iheight) = input.dimensions();
+    let pixel_data = pixel_data_iter(input.clone());
+
+
+    //load array of our dice. vec not needed here ofc
+    let dicks:[Dice; 6] = load_dice_images();
+    let dwidth = dicks[0].image.width();
+    let dheight = dicks[0].image.height();
+
+
+
+// GOING TO NEED THIS LATER PROBABLY
+    // let num_dice_x = iwidth / dwidth;
+    // let num_dice_y = iheight / dheight;
+//--end GOING TO NEED THIS LATER PROBABLY
+
+//  \/ one liner for pixel_data_iter() \/ \/ \/ \/ \/
+    // let dynamic_rgb_dice: Vec<  = rgb_dice.iter().map(|img| DynamicImage::ImageRgb8(img.clone())).collect();
+    // input.save("output/input.png").unwrap();
+
+
+    // for (i, dice) in dicks.iter().enumerate() {
+    //     let name: String = i.to_string()+".png";
+    //     input.save(name).unwrap_or_else(|err| println!("Error saving: {}", err));
+    // }
 
     // let output_width = num_dice_x * dwidth;
     // let output_height = num_dice_y * dheight;
@@ -62,31 +92,67 @@ fn main() {
 }
 
 
-fn load_dice_images() -> Vec<DynamicImage> {
-    //currently 500x500 dice
-    let mut dice_images = Vec::new();
+fn load_dice_images() -> [Dice; 6] {
+    // currently 500x500 dice
+
+    //super fancy core library... gotta remember this one.
+    let mut dices: [Dice; 6] = core::array::from_fn(|i: usize| {
+        let side: DiceSides = match i {
+            0 => DiceSides::One(DynamicImage::new_rgb8(500, 500)),
+            1 => DiceSides::Two(DynamicImage::new_rgb8(500, 500)),
+            2 => DiceSides::Three(DynamicImage::new_rgb8(500, 500)),
+            3 => DiceSides::Four(DynamicImage::new_rgb8(500, 500)),
+            4 => DiceSides::Five(DynamicImage::new_rgb8(500, 500)),
+            5 => DiceSides::Six(DynamicImage::new_rgb8(500, 500)),
+            _ => unreachable!(),
+        };
+        let image: DynamicImage = DynamicImage::new_rgb8(500, 500);
+        Dice { side, image }
+    });
     for i in 1..=6 {
         let image_path = format!("dice/{}side.png", i);
-        let image = open(image_path).unwrap().into_luma8();
-        // Convert ImageBuffer to DynamicImage and push to the vector
-        dice_images.push(DynamicImage::ImageLuma8(image));
+        let image = open(image_path).unwrap();
+        
+        let ds: Dice = Dice {
+            side: match i {
+                0 => DiceSides::One(image.clone()),
+                1 => DiceSides::Two(image.clone()),
+                2 => DiceSides::Three(image.clone()),
+                3 => DiceSides::Four(image.clone()),
+                4 => DiceSides::Five(image.clone()),
+                5 => DiceSides::Six(image.clone()),
+                _ => panic!("Invalid dice side"),
+            },
+            image: image.clone()
+        };
+        dices[i - 1] = ds;
+        
     }
-    dice_images
+    dices
+    
+    //try to manually deconstruct the 
+    // let dray: [DynamicImage; 6] = [
+    //     dice_images.remove(0),
+    //     dice_images.remove(0),
+    //     dice_images.remove(0),
+    //     dice_images.remove(0),
+    //     dice_images.remove(0),
+    //     dice_images.remove(0),
+    // ];
+    // 
 }
 
-fn load_image(_input_image: &str) -> DynamicImage {
+fn load_image(_input_image: &str) -> GrayImage {
     // Load Image from file
-    let input_image = open("images/falcons.jpg").unwrap().into_rgba8();
-    // Convert to grayscale
-    let grayscale_image = DynamicImage::ImageRgba8(input_image).into_luma8();
-    let dynamic_image = DynamicImage::ImageLuma8(grayscale_image.clone());
-    //getting the dimensions of the image
-    let (width, height) = grayscale_image.dimensions();
-    println!("Original Image size:\nWidth: {} Height: {}", width, height);
-    // change image size to squared
-    let resized = dynamic_image.resize(2500, 2000, image::imageops::FilterType::Lanczos3);
+    let input_image: GrayImage = open("images/falcons.jpg").unwrap().into_luma8();
+    // Image is grayscaled here
+    
+    let dynamic_image= DynamicImage::ImageLuma8(input_image);
+    //resized here, probs moving later ofc
+    let resized = dynamic_image.resize(2500, 2000, image::imageops::FilterType::Lanczos3).into_luma8();
     resized
 }
+
 
 
 fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
@@ -105,3 +171,10 @@ fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
     }
     opxls
 }
+
+
+
+
+
+
+
