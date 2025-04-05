@@ -127,6 +127,8 @@ fn main() {
     output_image.save(output_path).unwrap_or_else(|err| {
         eprintln!("Error saving output image: {}", err);
     });
+    println!("Dice size used: {}x{}", dwidth, dheight);
+    println!("Full image size: {}x{}", output_width, output_height);
     println!("Output saved to {}", output_path);
 }
 
@@ -134,8 +136,11 @@ fn main() {
 /// Loads dice images 1side.png to 6side.png from "dice/" folder.
 /// Panics on load failure or inconsistent dimensions.
 fn load_dice_images() -> [Dice; 6] {
+    // Target dimensions
+    let target_width: u32 = 40;
+    let target_height: u32 = 40;
+
     let mut dice_array: [Option<Dice>; 6] = Default::default();
-    let mut loaded_dice_dims: Option<(u32, u32)> = None;
 
     for i in 0..6 {
         let side_num = i + 1;
@@ -144,19 +149,22 @@ fn load_dice_images() -> [Dice; 6] {
             panic!("Failed to load dice image {}: {}", image_path, e);
         });
 
-        let current_dims = image.dimensions();
-
-        // Check dimensions
-         if let Some((w, h)) = loaded_dice_dims {
-             if current_dims != (w, h) || w == 0 || h == 0 {
-                 panic!("Inconsistent/Invalid dice dimensions. Expected {}x{}, but {} is {}x{}", w, h, image_path, current_dims.0, current_dims.1);
-            }
-        } else {
-             if current_dims.0 == 0 || current_dims.1 == 0 {
-                panic!("Dice image {} has zero dimensions.", image_path);
-             }
-             loaded_dice_dims = Some(current_dims); // Set expected dimensions from first image
+         // Check if original image has valid dimensions before resizing
+         if image.width() == 0 || image.height() == 0 {
+             panic!("Original dice image {} has zero dimensions before resizing.", image_path);
          }
+
+
+        // Resize the image
+        let mut resized_image = image.resize_exact(
+             target_width,
+             target_height,
+             imageops::FilterType::Lanczos3 // A good quality resizing filter
+        );
+
+        //INVERT        
+        resized_image.invert();
+
 
         // Assign simplified DiceSides enum variant
         let side = match side_num {
@@ -169,17 +177,18 @@ fn load_dice_images() -> [Dice; 6] {
             _ => unreachable!(),
         };
 
-        // Store in Option array first
-        dice_array[i] = Some(Dice { side, image });
+        // Store the resized image in Option array
+        dice_array[i] = Some(Dice { side, image: resized_image });
     }
 
     // Convert [Option<Dice>; 6] to [Dice; 6]
-     core::array::from_fn(|i| {
+    core::array::from_fn(|i| {
         dice_array[i]
-             .clone()
-             .expect("Internal error: Dice image option was None")
+            .clone()
+            .expect("Internal error: Dice image option was None after processing")
     })
 }
+
 
 /// Loads and returns a GrayImage. Input path is hardcoded for now.
 fn load_image(_input_path: &str) -> GrayImage {
