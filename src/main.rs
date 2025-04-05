@@ -1,7 +1,7 @@
 use core::num;
 use std::iter;
 
-use image::{buffer::Pixels, imageops::FilterType::Lanczos3, open, DynamicImage, GenericImage, GenericImageView, GrayImage, Pixels, RgbImage};
+use image::{buffer::Pixels, imageops::FilterType::Lanczos3, open, DynamicImage, GenericImage, GenericImageView, GrayImage, Pixel, Pixels, RgbImage};
 
 
 
@@ -17,7 +17,9 @@ enum DiceSides {
 struct PixelData {
     x: u32,
     y: u32,
-
+    r: u8,
+    g: u8,
+    b: u8,
 }
 
 
@@ -100,29 +102,35 @@ fn load_image(_input_image: &str) -> DynamicImage {
 //     }
 // }
 
-fn iter_grid_correctly(input: DynamicImage, dice_size: u32, dwidth: u32, dheight: u32, iwidth: u32, iheight: u32) {
+fn iter_proc(input: DynamicImage, dice_size: u32, dwidth: u32, dheight: u32, iwidth: u32, iheight: u32) {
     let mut output: RgbImage = input.clone().to_rgb8();
     // Top-left corner of the block in the source image
     let start_x: u32 = dwidth * dice_size;
     let start_y: u32 = dice_size * dice_size;
     
     // Bottom-right corner (exclusive) of the block in the source image
-    // Ensure we don't go past the image boundary if source dims aren't multiples of DICE_SIZE
-    let end_y: u32 = (start_y + d_size).min(source_height);
-    let end_x: u32 = (start_x + d_size).min(source_width);
-
-
-
-    
-    let pixels = input.pixels();
-    
-    for (x, y, pixel)  in pixels {
-                
-    }
-
-
-
+    let end_x: u32 = (start_x + dice_size).min(iwidth);
+    let end_y: u32 = (start_y + dice_size).min(iwidth);
     // Now, you know the block in gray_img runs from
     // x = start_x to end_x (exclusive)
     // y = start_y to end_y (exclusive)
+}
+
+
+
+fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
+    let ipxls = img.pixels();
+    let mut opxls: Vec<PixelData> = vec![];
+    for p in ipxls {
+        let rgb = p.2;
+        let pd: PixelData = PixelData {
+            x: p.0,
+            y: p.1,
+            r: rgb[0],
+            g: rgb[1],
+            b: rgb[2]
+        };
+        opxls.push(pd);
+    }
+    opxls
 }
