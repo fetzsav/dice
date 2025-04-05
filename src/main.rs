@@ -1,13 +1,9 @@
 use image::{
-    imageops, open, DynamicImage, GenericImage, GenericImageView, GrayImage, ImageReader, Luma, Pixel, RgbaImage // Use RGBA for output flexibility
+    imageops, GrayImage, RgbaImage // Only necessary imports for image processing
 };
-use std::path::Path; // For checking paths, creating dirs
-use image::{Rgba};
-use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut};
-use imageproc::rect::Rect;
-use ab_glyph::{FontVec, PxScale, ScaleFont, Font};
+use std::path::Path; // For checking paths, creating directories
 
-mod lib;
+use dice::*;
 
 // Dices struct might not be needed if directly using the array
 // #[derive(Debug)]
@@ -26,11 +22,11 @@ fn main() {
 
 
     // --- Load Input ---
-    let input: GrayImage = lib::load_image("images/pringles.png"); // Assuming load_image handles potential resize
+    let input: GrayImage = load_image("images/pringles.png"); // Assuming load_image handles potential resize
     let (iwidth, iheight) = input.dimensions();
 
     // --- Load Dice ---
-    let dicks: [lib::Dice; 6] = lib::load_dice_images(); // load_dice_images now returns [Dice; 6]
+    let dicks: [Dice; 6] = load_dice_images(); // load_dice_images now returns [Dice; 6]
     if dicks.is_empty() || dicks[0].image.width() == 0 || dicks[0].image.height() == 0 {
          eprintln!("Error loading dice or dice have invalid dimensions.");
          return;
@@ -83,7 +79,7 @@ fn main() {
             };
 
             // Map intensity to dice side
-            let target_side: lib::DiceSides = lib::map_intensity_to_dice_side(avg_intensity);
+            let target_side: DiceSides = map_intensity_to_dice_side(avg_intensity);
 
             // Find the matching dice image
             // Iterate through the 'dicks' array to find the Dice with the matching 'side'
@@ -106,7 +102,7 @@ fn main() {
     }
 
     //adding debug text
-    lib::add_reference_text(
+    add_reference_text(
         &mut output_image,
         (dwidth, dheight),
         num_dice_x * num_dice_y,

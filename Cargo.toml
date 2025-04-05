@@ -9,3 +9,7 @@ clap = { version = "4.5.35", features = ["derive"] }
 image = "0.25.6"
 imageproc = "0.25.0"
 rusttype = "0.9.3"
+
+
+[dependencies]
+dice_lib = { path = "../dice_lib" }
