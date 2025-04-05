@@ -29,9 +29,7 @@ struct Dices {
 struct PixelData {
     x: u32,
     y: u32,
-    r: u8,
-    g: u8,
-    b: u8,
+    i: u8
 }
 
 
@@ -155,22 +153,39 @@ fn load_image(_input_image: &str) -> GrayImage {
 
 
 
-fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
-    let ipxls = img.pixels();
+
+fn grayscale_intensity_vec(img: GrayImage) -> Vec<PixelData> {
+    let ipxls = img.enumerate_pixels();
     let mut opxls: Vec<PixelData> = vec![];
-    for p in ipxls {
-        let rgb = p.2;
+    for (x, y, pixel) in ipxls {
+        let intensity = pixel[0]; // Grayscale intensity
         let pd: PixelData = PixelData {
-            x: p.0,
-            y: p.1,
-            r: rgb[0],
-            g: rgb[1],
-            b: rgb[2]
+            x,
+            y,
+            i: intensity
         };
         opxls.push(pd);
     }
     opxls
 }
+
+
+// fn pixel_data_iter(img: DynamicImage) -> Vec<PixelData> {
+//     let ipxls = img.pixels();
+//     let mut opxls: Vec<PixelData> = vec![];
+//     for p in ipxls {
+//         let rgb = p.2;
+//         let pd: PixelData = PixelData {
+//             x: p.0,
+//             y: p.1,
+//             r: rgb[0],
+//             g: rgb[1],
+//             b: rgb[2]
+//         };
+//         opxls.push(pd);
+//     }
+//     opxls
+// }
 
 
 
