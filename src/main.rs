@@ -1,13 +1,5 @@
 use image::{
-    imageops, // For crop and overlay
-    open,
-    DynamicImage,
-    GenericImage, // For copy_from (if needed) and new
-    GenericImageView,
-    GrayImage,
-    Luma, // For grayscale pixel access
-    Pixel,
-    RgbaImage, // Use RGBA for output flexibility
+    imageops, open, DynamicImage, GenericImage, GenericImageView, GrayImage, ImageReader, Luma, Pixel, RgbaImage // Use RGBA for output flexibility
 };
 use std::path::Path; // For checking paths, creating dirs
 
@@ -38,7 +30,7 @@ struct Dice {
 
 fn main() {
     // --- Load Input ---
-    let input: GrayImage = load_image("images/falcons.jpg"); // Assuming load_image handles potential resize
+    let input: GrayImage = load_image("images/pringles.png"); // Assuming load_image handles potential resize
     let (iwidth, iheight) = input.dimensions();
 
     // --- Load Dice ---
@@ -128,6 +120,7 @@ fn main() {
         eprintln!("Error saving output image: {}", err);
     });
     println!("Dice size used: {}x{}", dwidth, dheight);
+    println!("Total dice used: {}", num_dice_x * num_dice_y);
     println!("Full image size: {}x{}", output_width, output_height);
     println!("Output saved to {}", output_path);
 }
@@ -137,8 +130,8 @@ fn main() {
 /// Panics on load failure or inconsistent dimensions.
 fn load_dice_images() -> [Dice; 6] {
     // Target dimensions
-    let target_width: u32 = 40;
-    let target_height: u32 = 40;
+    let target_width: u32 = 50;
+    let target_height: u32 = 50;
 
     let mut dice_array: [Option<Dice>; 6] = Default::default();
 
@@ -193,20 +186,26 @@ fn load_dice_images() -> [Dice; 6] {
 /// Loads and returns a GrayImage. Input path is hardcoded for now.
 fn load_image(_input_path: &str) -> GrayImage {
      // Path is currently hardcoded inside, consider passing _input_path through
-    let img = open("images/falcons.jpg") // Use _input_path here if needed
+
+    // let img = ImageReader::open("images/flag.jpeg").unwrap()
+    //     .decode()
+    //     .expect("Failed to decode image")
+    //     .into_luma8();
+
+    let img = open("images/pringles.png") // Use _input_path here if needed
         .expect("Failed to load input image")
         .into_luma8();
 
-    // Decide if resizing is needed here or should be removed/conditional
+    // // Decide if resizing is needed here or should be removed/conditional
     // let dynamic_image = DynamicImage::ImageLuma8(img);
-    // let resized = dynamic_image.resize(2500, 2000, image::imageops::FilterType::Lanczos3).into_luma8();
+    // let resized = dynamic_image.resize(3072,3072, image::imageops::FilterType::Lanczos3).into_luma8();
     // return resized;
 
     img // Return original grayscale image if no resize
 }
 
 
-/// Maps average grayscale intensity (0-255) to a DiceSides variant.
+// / Maps average grayscale intensity (0-255) to a DiceSides variant.
 fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
     match avg_intensity {
          0..=42 => DiceSides::One,
@@ -217,5 +216,18 @@ fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
         215..=255 => DiceSides::Six,
     }
 }
+
+// // / Maps average grayscale intensity (0-255) to a DiceSides variant.
+// fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
+//     match avg_intensity {
+//          0..=50 => DiceSides::One,
+//          51..=100 => DiceSides::Two,
+//          101..=150 => DiceSides::Three,
+//          151..=200 => DiceSides::Four,
+//          201..=230 => DiceSides::Five,
+//          231..=255 => DiceSides::Six,
+//     }
+// }
+
 
 // Removed grayscale_intensity_vec and pixel_data_iter as block processing is done directly in main
