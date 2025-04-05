@@ -130,8 +130,8 @@ fn main() {
 /// Panics on load failure or inconsistent dimensions.
 fn load_dice_images() -> [Dice; 6] {
     // Target dimensions
-    let target_width: u32 = 50;
-    let target_height: u32 = 50;
+    let target_width: u32 = 20;
+    let target_height: u32 = 20;
 
     let mut dice_array: [Option<Dice>; 6] = Default::default();
 
@@ -192,14 +192,14 @@ fn load_image(_input_path: &str) -> GrayImage {
     //     .expect("Failed to decode image")
     //     .into_luma8();
 
-    let img = open("images/pringles.png") // Use _input_path here if needed
+    let img = open("images/falcons.jpg") // Use _input_path here if needed
         .expect("Failed to load input image")
         .into_luma8();
 
-    // // Decide if resizing is needed here or should be removed/conditional
-    // let dynamic_image = DynamicImage::ImageLuma8(img);
-    // let resized = dynamic_image.resize(3072,3072, image::imageops::FilterType::Lanczos3).into_luma8();
-    // return resized;
+    // // conditional resize here later
+    let dynamic_image = DynamicImage::ImageLuma8(img);
+    let resized = dynamic_image.resize(1800,1800, image::imageops::FilterType::Lanczos3).into_luma8();
+    return resized;
 
     img // Return original grayscale image if no resize
 }
@@ -216,6 +216,56 @@ fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
         215..=255 => DiceSides::Six,
     }
 }
+
+
+use image::{Rgba, RgbaImage};
+use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut};
+use imageproc::rect::Rect;
+use rusttype::{Font, Scale};
+
+/// Adds reference text (e.g., dice size, total dice used, full image size) to the image.
+fn add_reference_text(
+    image: &mut RgbaImage,
+    dice_size: (u32, u32),
+    total_dice: u32,
+    full_image_size: (u32, u32),
+) {
+    // Load a font (you can replace this with a path to a custom font if needed)
+    let font_data = include_bytes!("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf");
+    let font = Font::try_from_bytes(font_data as &[u8]).expect("Failed to load font");
+
+    // Text to overlay
+    let text = format!(
+        "Dice size: {}x{}\nTotal dice: {}\nImage size: {}x{}",
+        dice_size.0, dice_size.1, total_dice, full_image_size.0, full_image_size.1
+    );
+
+    // Text properties
+    let scale = Scale { x: 15.0, y: 15.0 }; // Font size
+    let text_color = Rgba([255, 255, 255, 255]); // White text
+    let background_color = Rgba([0, 0, 0, 200]); // Black background with some transparency
+
+    // Calculate text dimensions
+    let text_width = 200; // Approximate width of the text box
+    let text_height = 50; // Approximate height of the text box
+
+    // Draw a black rectangle as the background for the text
+    let rect = Rect::at(5, (image.height() - text_height - 5) as i32)
+        .of_size(text_width, text_height);
+    draw_filled_rect_mut(image, rect, background_color);
+
+    // Draw the text onto the image
+    draw_text_mut(
+        image,
+        text_color,
+        10, // X position
+        (image.height() - text_height) as i32, // Y position
+        scale,
+        &font,
+        &text,
+    );
+}
+
 
 // // / Maps average grayscale intensity (0-255) to a DiceSides variant.
 // fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
