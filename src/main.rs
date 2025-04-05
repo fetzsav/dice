@@ -4,14 +4,14 @@ use image::{imageops, GrayImage, RgbaImage}; // Only necessary imports for image
 mod dicelib;
 use dicelib::{add_reference_text, map_intensity_to_dice_side, load_image, load_dice_images, Dice, DiceSides};
 
-pub fn load_dice_images() -> [Dice; 6] {
-    let dice_images = [
-        include_bytes!("../dice/1side.png"),
-        include_bytes!("../dice/2side.png"),
-        include_bytes!("../dice/3side.png"),
-        include_bytes!("../dice/4side.png"),
-        include_bytes!("../dice/5side.png"),
-        include_bytes!("../dice/6side.png"),
+pub fn load_dice_images_static() -> [Dice; 6] {
+    let dice_images: [&[u8]; 6] = [
+        include_bytes!("../dice/1side.png").as_ref(),
+        include_bytes!("../dice/2side.png").as_ref(),
+        include_bytes!("../dice/3side.png").as_ref(),
+        include_bytes!("../dice/4side.png").as_ref(),
+        include_bytes!("../dice/5side.png").as_ref(),
+        include_bytes!("../dice/6side.png").as_ref(),
     ];
 
     let mut dice_array: [Option<Dice>; 6] = Default::default();
@@ -51,7 +51,7 @@ fn main() {
     let (iwidth, iheight) = input.dimensions();
 
     // --- Load Dice ---
-    let dicks: [Dice; 6] = load_dice_images(); // load_dice_images now returns [Dice; 6]
+    let dicks: [Dice; 6] = load_dice_images_static(); // load_dice_images now returns [Dice; 6]
     if dicks.is_empty() || dicks[0].image.width() == 0 || dicks[0].image.height() == 0 {
         eprintln!("Error loading dice or dice have invalid dimensions.");
         return;

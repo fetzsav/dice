@@ -28,7 +28,7 @@ pub fn add_reference_text(
     full_image_size: (u32, u32),
 ) {
     // load a font
-    let font_data = std::fs::read("/usr/share/fonts/TTF/DejaVuSans-Bold.ttf")
+    let font_data = std::fs::read("DejaVuSans-Bold.ttf")
         .expect("Failed to load font file");
     let font = FontVec::try_from_vec(font_data.to_vec()).expect("font loading failed");
 
@@ -125,7 +125,7 @@ pub fn load_dice_images() -> [Dice; 6] {
 
 
 /// Loads and returns a GrayImage. Input path is hardcoded for now.
-pub fn load_image(_input_path: &str) -> GrayImage {
+pub fn load_image(input_path: &str) -> GrayImage {
     // Path is currently hardcoded inside, consider passing _input_path through
 
    // let img = ImageReader::open("images/flag.jpeg").unwrap()
@@ -133,7 +133,7 @@ pub fn load_image(_input_path: &str) -> GrayImage {
    //     .expect("Failed to decode image")
    //     .into_luma8();
 
-   let img = open("images/falcons.jpg") // Use _input_path here if needed
+   let img = open(input_path) // Use _input_path here if needed
        .expect("Failed to load input image")
        .into_luma8();
 
