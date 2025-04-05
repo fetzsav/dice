@@ -1,7 +1,7 @@
 use core::num;
 use std::iter;
 
-use image::{imageops::FilterType::Lanczos3, open, DynamicImage, GrayImage, RgbImage, GenericImage};
+use image::{buffer::Pixels, imageops::FilterType::Lanczos3, open, DynamicImage, GenericImage, GenericImageView, GrayImage, Pixels, RgbImage};
 
 
 
@@ -14,14 +14,26 @@ enum DiceSides {
     Six,
 }
 
+struct PixelData {
+    x: u32,
+    y: u32,
 
+}
+
+
+struct PixelMap {
+    dice: DiceSides,
+    x: u32,
+    y: u32,
+    pixel: Rgba<u8>
+}
 struct DiceMap {
     dice: DiceSides,
     x: u32,
     y: u32,
 }
 
-struct {
+struct SetofDice {
     dice: Vec<DiceMap>, 
 }
 
@@ -89,7 +101,7 @@ fn load_image(_input_image: &str) -> DynamicImage {
 // }
 
 fn iter_grid_correctly(input: DynamicImage, dice_size: u32, dwidth: u32, dheight: u32, iwidth: u32, iheight: u32) {
-    let mut output = input.clone();
+    let mut output: RgbImage = input.clone().to_rgb8();
     // Top-left corner of the block in the source image
     let start_x: u32 = dwidth * dice_size;
     let start_y: u32 = dice_size * dice_size;
@@ -100,7 +112,16 @@ fn iter_grid_correctly(input: DynamicImage, dice_size: u32, dwidth: u32, dheight
     let end_x: u32 = (start_x + d_size).min(source_width);
 
 
+
     
+    let pixels = input.pixels();
+    
+    for (x, y, pixel)  in pixels {
+                
+    }
+
+
+
     // Now, you know the block in gray_img runs from
     // x = start_x to end_x (exclusive)
     // y = start_y to end_y (exclusive)
