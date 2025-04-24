@@ -23,6 +23,8 @@ To do:
 </details>
 
 Buildable and usable CLI app out of the box as is. Build... run... you got it. 
+Works best with square images... 2048x2048+ ideally. Reccomended 16 or 32 dice. 
+Has support for custom output sizes. Fills blank areas with background dice and centers image without distorting.
 ## Image to Mapped Dice "ASCII" Art
 
 
@@ -36,7 +38,7 @@ Usable in it's current state. Potential to release on Linux repos in the future.
 
 - Core logic is built around square images, although have began to veer towards supporting a more dynamic range of input (and output) images.
 - Needs alot of code cleanup and orginization
-- Possibility to add to Linux repos later as installable package. Maybe a nifty tool someone would like to use to generate wallpapers or something.
+- Possibility to add to Linux repos later.
 
 
 *Copyright Fetzer - copyright@fetz.dev*
