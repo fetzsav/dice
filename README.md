@@ -1,4 +1,4 @@
-# DICESKI
+# DICECKII
 BETA
 <details> 
   <summary>Image Examples</summary>
