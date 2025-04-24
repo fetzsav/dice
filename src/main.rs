@@ -33,7 +33,7 @@ fn load_dice_images_d(dice_dir: &str) -> [Dice; 6] {
     let d_size: u32 = match d_size_input.trim_end().parse() {
         Ok(size) if size > 0 => size,
         _ => {
-            println!("Invalid size. Defaulting to 32x32. You're welcome.");
+            println!("Invalid size. Defaulting to 32x32.");
             32
         }
     };
@@ -115,9 +115,9 @@ fn load_images_dynamic() -> Images {
     std::io::stdin().read_line(&mut invert_i).unwrap();
     if invert_i.trim().eq_ignore_ascii_case("y") {
         imageops::invert(&mut i);
-        println!("Image inverted. You're welcome.");
+        println!("Image inverted.");
     } else {
-        println!("No inversion. Keeping it original.");
+        println!("Keeping it original. I like it.");
     }
 
     // Crop the input image to a square. Dice grids love squares.
