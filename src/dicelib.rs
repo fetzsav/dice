@@ -27,38 +27,29 @@ pub fn add_reference_text(
     total_dice: u32,
     full_image_size: (u32, u32),
 ) {
-    // load a font
-    let font_data = std::fs::read("DejaVuSans-Bold.ttf")
-        .expect("Failed to load font file");
-    let font = FontVec::try_from_vec(font_data.to_vec()).expect("font loading failed");
+    let font_data = include_bytes!("../DejaVuSans-Bold.ttf");
+    let font = FontVec::try_from_vec(font_data.to_vec()).expect("Failed to load font");
+    let scale = PxScale::from(20.0); // Font size
 
-    // build the overlay text
     let text = format!(
-        "dice size: {}x{}\ntotal dice: {}\nimage size: {}x{}",
+        "Dice size: {}x{}, Total dice: {}, Image size: {}x{}",
         dice_size.0, dice_size.1, total_dice, full_image_size.0, full_image_size.1
     );
 
-    // text style
-    let scale = PxScale::from(40.0);
-    let font = font; // Use FontVec directly without scaling
-    let text_color = Rgba([255, 255, 255, 255]); // white text
-    let background_color = Rgba([0, 0, 0, 200]); // semi-transparent black
+    // Calculate text dimensions
+    let text_width = text.len() as u32 * 12; // Approximate width per character
+    let text_height = 24; // Approximate height of the text
 
-    // estimate text box dimensions
-    let text_width = 200;
-    let text_height = 60;
+    // Draw black background rectangle
+    let rect = Rect::at(0, 0).of_size(text_width, text_height);
+    draw_filled_rect_mut(image, rect, Rgba([0, 0, 0, 255])); // Black background
 
-    // draw a black rectangle behind the text
-    let rect = Rect::at(5, 5) // Top-left corner
-        .of_size(text_width, text_height);
-    draw_filled_rect_mut(image, rect, background_color);
-
-    // draw the text onto the image
+    // Draw the text
     draw_text_mut(
         image,
-        text_color,
-        10, // x offset
-        10, // y offset
+        Rgba([255, 255, 255, 255]), // White text
+        5,                          // X offset
+        5,                          // Y offset
         scale,
         &font,
         &text,
@@ -176,7 +167,7 @@ pub fn dice_images() -> [Dice; 6] {
         );
 
         //INVERT        
-        resized_image.invert();
+        // resized_image.invert();
 
 
         // Assign simplified DiceSides enum variant
@@ -204,13 +195,24 @@ pub fn dice_images() -> [Dice; 6] {
 
 
 // / Maps average grayscale intensity (0-255) to a DiceSides variant.
+// pub fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
+//     match avg_intensity {
+//          0..=42 => DiceSides::One,
+//          43..=85 => DiceSides::Two,
+//          86..=128 => DiceSides::Three,
+//         129..=171 => DiceSides::Four,
+//         172..=214 => DiceSides::Five,
+//         215..=255 => DiceSides::Six,
+//     }
+// }
+
 pub fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
     match avg_intensity {
-         0..=42 => DiceSides::One,
-         43..=85 => DiceSides::Two,
-         86..=128 => DiceSides::Three,
-        129..=171 => DiceSides::Four,
-        172..=214 => DiceSides::Five,
-        215..=255 => DiceSides::Six,
+         0..=50 => DiceSides::One,       // Darkest range
+         51..=100 => DiceSides::Two,    // Slightly brighter
+         101..=140 => DiceSides::Three, // Mid-range
+         141..=180 => DiceSides::Four,  // Slightly brighter
+         181..=220 => DiceSides::Five,  // Brighter
+         221..=255 => DiceSides::Six,   // Brightest range
     }
 }
