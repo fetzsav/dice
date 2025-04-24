@@ -234,8 +234,8 @@ fn main() {
     //Calculate Grid
     let dw = d_size; // Define dice width based on dice size
     let dh = d_size; // Define dice height based on dice size
-    let num_dice_x = iwidth / dw;
-    let num_dice_y = iheight / dh;
+    let mut num_dice_x = iwidth / dw;
+    let mut num_dice_y = iheight / dh;
 
     if num_dice_x == 0 || num_dice_y == 0 {
         eprintln!("Input image too small for dice dimensions.");
@@ -247,13 +247,26 @@ fn main() {
     let mut oh = num_dice_y * dh;
     let mut oi = RgbaImage::new(ow, oh);
 
+
+            match resize_output(&oi) {
+            Some(r) => {
+                oi = r;
+                let (now, noh) = oi.dimensions();
+                ow = now;
+                oh = noh;
+                num_dice_x = now / dw;
+                num_dice_y = noh / dh;
+            }
+            None => {}
+        }
+
     //Map Blocks and Construct Output
     for grid_y in 0..num_dice_y {
         for grid_x in 0..num_dice_x {
             let block_start_x = grid_x * dw;
             let block_start_y = grid_y * dh;
 
-            let block_view = imageops::crop_imm(&dicks.input, block_start_x, block_start_y, dw, dh);
+            let block_view = imageops::crop_imm(&oi, block_start_x, block_start_y, dw, dh);
 
             let mut total_intensity: u64 = 0;
             let num_pixels_in_block = (dw * dh) as u64;
@@ -299,17 +312,6 @@ fn main() {
         
     };
 
-    
-
-        match resize_output(&oi) {
-            Some(r) => {
-                oi = r;
-                let (now, noh) = oi.dimensions();
-                ow = now;
-                oh = noh;
-            }
-            None => {}
-        }
 
     //Save Output
     let output_path = "output/dice_output.png";
