@@ -22,7 +22,7 @@ To do:
 <img src='https://github.com/user-attachments/assets/7f82a1df-bc2f-431b-9082-294b55bc9ace' alt='white dice' width="400" height="400">
 </details>
 
-
+Buildable and usable out of the box as is. Build... run... you got it. 
 ## Image to Mapped Dice "ASCII" Art
 
 
