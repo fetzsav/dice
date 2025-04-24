@@ -2,6 +2,8 @@
 BETA
 
 Basically just using grid mapping and rust image library to map blocks to an enum based on pixel data obtained from std::images
+
+
 To do:
 - rewrite
 - licensing
