@@ -1,9 +1,11 @@
 # DICECII
 BETA
+
+Basically just using grid mapping and rust image library to map blocks to an enum based on pixel data obtained from std::images
 To do:
 - rewrite
 - licensing
-- rearrange and clean code into library rust crate for potential other use cases.
+- rearrange and clean code into library rust crate for potential other use cases (high level... using other images than "dice".
 - rewrite
 - add more "use-case" functions, rearrange app accordingly.
 - fix tons of 💩
