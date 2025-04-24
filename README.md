@@ -1,6 +1,5 @@
 # DICESKI
 BETA
-## Image to Mapped Dice "ASCII" Art
 <details> 
   <summary>Image Examples</summary>
 <img src='https://github.com/user-attachments/assets/7c8fa96f-48aa-4167-ba1a-de70a5e9294e' alt='original' width="400" height="400">
@@ -8,6 +7,10 @@ BETA
 <img src="https://github.com/user-attachments/assets/401aa603-b861-43db-9624-ba8cc9c13e7e" alt="Dice output 2" width="400" height="400">
 <img src='https://github.com/user-attachments/assets/7f82a1df-bc2f-431b-9082-294b55bc9ace' alt='white dice' width="400" height="400">
 </details>
+
+
+## Image to Mapped Dice "ASCII" Art
+
 
 
 
