@@ -208,11 +208,11 @@ pub fn load_image(input_path: &str) -> GrayImage {
 
 pub fn map_intensity_to_dice_side(avg_intensity: u8) -> DiceSides {
     match avg_intensity {
-         0..=50 => DiceSides::One,       // Darkest range
-         51..=100 => DiceSides::Two,    // Slightly brighter
-         101..=140 => DiceSides::Three, // Mid-range
-         141..=180 => DiceSides::Four,  // Slightly brighter
-         181..=220 => DiceSides::Five,  // Brighter
-         221..=255 => DiceSides::Six,   // Brightest range
+         0..=20 => DiceSides::One,       // Darkest range
+         21..=45 => DiceSides::Two,    // Slightly brighter
+         96..=175 => DiceSides::Three, // Mid-range
+         176..=190 => DiceSides::Four,  // Slightly brighter
+         191..=230 => DiceSides::Five,  // Brighter
+         231..=255 => DiceSides::Six,   // Brightest range
     }
 }
