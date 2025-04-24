@@ -243,8 +243,8 @@ fn main() {
     }
 
     //Prepare Output Image
-    let ow = num_dice_x * dw;
-    let oh = num_dice_y * dh;
+    let mut ow = num_dice_x * dw;
+    let mut oh = num_dice_y * dh;
     let mut oi = RgbaImage::new(ow, oh);
 
     //Map Blocks and Construct Output
@@ -299,6 +299,41 @@ fn main() {
         
     };
 
+    
+
+        match resize_output(&oi) {
+            Some(r) => {
+                oi = r;
+                let (now, noh) = oi.dimensions();
+                ow = now;
+                oh = noh;
+            }
+            None => {}
+        }
+
+    //Save Output
+    let output_path = "output/dice_output.png";
+    if let Some(parent_dir) = Path::new(output_path).parent() {
+        std::fs::create_dir_all(parent_dir).expect("Failed to create output directory");
+    }
+    oi.save(output_path).unwrap_or_else(|err| {
+        eprintln!("Error saving output image: {}", err);
+    });
+    println!("Original image size: {}x{}", iwidth, iheight);
+    println!("Dice size used: {}x{}", dw, dh);
+    println!("Total dice used: {}", num_dice_x * num_dice_y);
+    println!("Output image size: {}x{}", ow, oh);
+    println!("Output saved to {}", output_path);
+
+    //Keep CMD Window Open
+    println!("Press Enter to exit...");
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+}
+
+
+
+fn resize_output(oi: &RgbaImage) -> Option<RgbaImage> {
     println!("Do you want to set a custom output image size? (y/n):");
     let mut custom_size_input = String::new();
     std::io::stdin().read_line(&mut custom_size_input).unwrap();
@@ -327,36 +362,41 @@ fn main() {
 
         println!("Custom output size set to {}x{}", output_width, output_height);
 
-        // Resize the original output image to fit the desired dimensions
-        let resized_oi = image::imageops::resize(
-            &oi,
-            output_width,
-            output_height,
+        // Create a new blank image with the desired dimensions
+        let mut resized_oi = RgbaImage::new(output_width, output_height);
+
+        // Calculate the aspect ratio of the original image
+        let (oi_width, oi_height) = oi.dimensions();
+        let aspect_ratio = oi_width as f32 / oi_height as f32;
+
+        // Calculate the new dimensions for the original image while maintaining aspect ratio
+        let (new_width, new_height) = if output_width as f32 / output_height as f32 > aspect_ratio {
+            // Constrain by height
+            let new_width = (output_height as f32 * aspect_ratio).round() as u32;
+            (new_width, output_height)
+        } else {
+            // Constrain by width
+            let new_height = (output_width as f32 / aspect_ratio).round() as u32;
+            (output_width, new_height)
+        };
+
+        // Resize the original image to the new dimensions
+        let scaled_oi = image::imageops::resize(
+            oi,
+            new_width,
+            new_height,
             imageops::FilterType::Lanczos3, // High-quality resizing filter
         );
 
-        oi = resized_oi;
-        println!("Output image resized to {}x{}.", output_width, output_height);
+        // Calculate the offsets to center the scaled image
+        let offset_x = ((output_width - new_width) / 2) as i64;
+        let offset_y = ((output_height - new_height) / 2) as i64;
+
+        // Overlay the scaled image onto the new blank image
+        imageops::overlay(&mut resized_oi, &scaled_oi, offset_x, offset_y);
+
+        Some(resized_oi)
     } else {
-        println!("Using default output size.");
+        None
     }
-
-    //Save Output
-    let output_path = "output/dice_output.png";
-    if let Some(parent_dir) = Path::new(output_path).parent() {
-        std::fs::create_dir_all(parent_dir).expect("Failed to create output directory");
-    }
-    oi.save(output_path).unwrap_or_else(|err| {
-        eprintln!("Error saving output image: {}", err);
-    });
-    println!("Original image size: {}x{}", ow, oh);
-    println!("Dice size used: {}x{}", dw, dh);
-    println!("Total dice used: {}", num_dice_x * num_dice_y);
-    println!("Output image size: {}x{}", ow, oh);
-    println!("Output saved to {}", output_path);
-
-    //Keep CMD Window Open
-    println!("Press Enter to exit...");
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
 }
