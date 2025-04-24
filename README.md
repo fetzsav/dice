@@ -1,4 +1,4 @@
-# DICECKII
+# DICECII
 BETA
 <details> 
   <summary>Image Examples</summary>
