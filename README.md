@@ -1,6 +1,7 @@
 # DICESKI
 BETA
 ## Image to Mapped Dice "ASCII" Art
+![dice_output](https://github.com/user-attachments/assets/812e5a45-6e1a-4a2a-9981-0d520944ebd2)
 
 A CLI app that transforms any image into a unique representation using dice faces as "ASCII" art. The app analyzes the grayscale intensity of each pixel in the image and maps it to a corresponding dice face (1-6). Resulting in a dice-based representation of the image.
 
