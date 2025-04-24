@@ -1,7 +1,7 @@
 # DICECII
 BETA
 
-Basically just using grid mapping and rust image library to map blocks to an enum based on pixel data obtained from std::images
+Basically just using grid mapping and rust image library to map blocks to an enum based on pixel data obtained by image crate.
 
 
 To do:
