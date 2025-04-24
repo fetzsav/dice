@@ -1,5 +1,14 @@
 # DICECII
 BETA
+To do:
+- rewrite
+- licensing
+- rearrange and clean code into library rust crate for potential other use cases.
+- rewrite
+- add more "use-case" functions, rearrange app accordingly.
+- fix tons of 💩
+- rewrite
+
 <details> 
   <summary>Image Examples</summary>
 <img src='https://github.com/user-attachments/assets/7c8fa96f-48aa-4167-ba1a-de70a5e9294e' alt='original' width="400" height="400">
