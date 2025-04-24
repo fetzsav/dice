@@ -218,55 +218,41 @@ fn main() {
 
 
     //Load Dice
-    let dicks: Images = load_images_dynamic();
+    let mut dicks: Images = load_images_dynamic();
     // let mut dicks: [Dice; 6] = load_dice_images_static(d_size); // Pass dice size to the function
     if dicks.dice.is_empty() || dicks.dice[0].image.width() == 0 || dicks.dice[0].image.height() == 0 {
         eprintln!("Error loading dice or dice have invalid dimensions.");
         return;
     }
 
+    let dw = dicks.dice[0].image.width();
+    let dh = dicks.dice[0].image.height();
 
-    let (iwidth, iheight) = dicks.input.dimensions();
-    println!("{} {}", iwidth, iheight);
-
-    let d_size = dicks.dice[0].image.width();
-
-    //Calculate Grid
-    let dw = d_size; // Define dice width based on dice size
-    let dh = d_size; // Define dice height based on dice size
-    let mut num_dice_x = iwidth / dw;
-    let mut num_dice_y = iheight / dh;
-
-    if num_dice_x == 0 || num_dice_y == 0 {
-        eprintln!("Input image too small for dice dimensions.");
-        return;
+    // Resize the input image if needed
+    match resize_output(&dicks.input) {
+        Some(resized_input) => {
+            dicks.input = resized_input;
+        }
+        None => {}
     }
 
-    //Prepare Output Image
+    // Recalculate grid dimensions based on the resized input image
+    let (iwidth, iheight) = dicks.input.dimensions();
+    let num_dice_x = iwidth / dw;
+    let num_dice_y = iheight / dh;
+
+    // Prepare Output Image
     let mut ow = num_dice_x * dw;
     let mut oh = num_dice_y * dh;
     let mut oi = RgbaImage::new(ow, oh);
 
-
-            match resize_output(&oi) {
-            Some(r) => {
-                oi = r;
-                let (now, noh) = oi.dimensions();
-                ow = now;
-                oh = noh;
-                num_dice_x = now / dw;
-                num_dice_y = noh / dh;
-            }
-            None => {}
-        }
-
-    //Map Blocks and Construct Output
+    // Map Blocks and Construct Output
     for grid_y in 0..num_dice_y {
         for grid_x in 0..num_dice_x {
             let block_start_x = grid_x * dw;
             let block_start_y = grid_y * dh;
 
-            let block_view = imageops::crop_imm(&oi, block_start_x, block_start_y, dw, dh);
+            let block_view = imageops::crop_imm(&dicks.input, block_start_x, block_start_y, dw, dh);
 
             let mut total_intensity: u64 = 0;
             let num_pixels_in_block = (dw * dh) as u64;
@@ -335,7 +321,7 @@ fn main() {
 
 
 
-fn resize_output(oi: &RgbaImage) -> Option<RgbaImage> {
+fn resize_output(input: &GrayImage) -> Option<GrayImage> {
     println!("Do you want to set a custom output image size? (y/n):");
     let mut custom_size_input = String::new();
     std::io::stdin().read_line(&mut custom_size_input).unwrap();
@@ -365,11 +351,11 @@ fn resize_output(oi: &RgbaImage) -> Option<RgbaImage> {
         println!("Custom output size set to {}x{}", output_width, output_height);
 
         // Create a new blank image with the desired dimensions
-        let mut resized_oi = RgbaImage::new(output_width, output_height);
+        let mut resized_input = GrayImage::new(output_width, output_height);
 
         // Calculate the aspect ratio of the original image
-        let (oi_width, oi_height) = oi.dimensions();
-        let aspect_ratio = oi_width as f32 / oi_height as f32;
+        let (input_width, input_height) = input.dimensions();
+        let aspect_ratio = input_width as f32 / input_height as f32;
 
         // Calculate the new dimensions for the original image while maintaining aspect ratio
         let (new_width, new_height) = if output_width as f32 / output_height as f32 > aspect_ratio {
@@ -383,8 +369,8 @@ fn resize_output(oi: &RgbaImage) -> Option<RgbaImage> {
         };
 
         // Resize the original image to the new dimensions
-        let scaled_oi = image::imageops::resize(
-            oi,
+        let scaled_input = image::imageops::resize(
+            input,
             new_width,
             new_height,
             imageops::FilterType::Lanczos3, // High-quality resizing filter
@@ -395,9 +381,9 @@ fn resize_output(oi: &RgbaImage) -> Option<RgbaImage> {
         let offset_y = ((output_height - new_height) / 2) as i64;
 
         // Overlay the scaled image onto the new blank image
-        imageops::overlay(&mut resized_oi, &scaled_oi, offset_x, offset_y);
+        imageops::overlay(&mut resized_input, &scaled_input, offset_x, offset_y);
 
-        Some(resized_oi)
+        Some(resized_input)
     } else {
         None
     }
