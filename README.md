@@ -11,4 +11,4 @@ Usable in it's current state. Potential to release on Linux repos in the future.
 - Possibility to add to Linux repos later as installable package
 
 
-*Copyright Fetzer - fetz@fetz.dev*
+*Copyright Fetzer - copyright@fetz.dev*
