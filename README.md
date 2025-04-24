@@ -11,7 +11,7 @@ To do:
 - fix tons of 💩
 - rewrite
 
-**click me \/ \/**
+**click me \\/ \\/**
 <details> 
   <summary>Image Examples</summary>
 <img src='https://github.com/user-attachments/assets/7c8fa96f-48aa-4167-ba1a-de70a5e9294e' alt='original' width="400" height="400">
